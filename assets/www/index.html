@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+    <script type="text/javascript" src="cordova.js"></script>
+     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="jquery.mobile-1.3.2.min.css" />
+    <script src="jquery-1.9.1.min.js"></script>
+    <script src="jquery.mobile-1.3.2.min.js"></script>
+    <script>
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        var _root = null;
+        var biezacykatalog = null;
+        var nadrzednykatalog = null;
+        var prezentacja = false; /// flase -> standardowy , true -> tabelka 
+        var biezacyelement = null;
+        var operacja = false;
+        var rodzaj = null;
+        var q = null;
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        $(document).ready(function () {
+            $("#anime_past").animate({ height: 250 }, 200);
+            $(".ui-grid-b").empty();
+            $(".moja_lista").empty();
+
+            $("body").click(function (event) {
+                // $("#log").html("clicked: " + event.target.nodeName);
+                $("#anime").animate({ height: 0 }, 100);
+            });
+
+
+            $("#refresh").click(function () {
+                /// alert("REFRESZUJE !!!");
+                $(".ui-grid-b").empty();
+                $(".moja_lista").empty();
+               
+                listFolders(biezacykatalog);
+                
+                ///  alert("REFRESZUJE !!!");
+            })
+
+           
+                
+
+                $("#tools").click(function () {
+
+                    $("#pop1").popup("open");
+
+
+
+
+                })
+
+
+                $("#radio-choice-1").click(function () {
+                    prezentacja = true;
+                    $("#pop1").popup("close");
+                    $(".ui-grid-b").empty();
+                    $(".moja_lista").empty();
+                    listFolders(biezacykatalog);
+                })
+
+                $("#radio-choice-2").click(function () {
+                    prezentacja = false;
+                    $("#pop1").popup("close");
+                    $(".ui-grid-b").empty();
+                    $(".moja_lista").empty();
+                    listFolders(biezacykatalog);
+                })
+
+                $("#quit").click(function () {
+                    navigator.app.exitApp();
+                })
+
+
+                $("#up").click(function () {
+
+
+                    biezacykatalog.getParent(function (dir) { biezacykatalog = dir }, function (e) { alert("Wycofanie " + e) })
+                    ///// alert("REFRESZUJE !!!");
+                    $(".moja_lista").empty();
+                    $(".ui-grid-b").empty();
+                    listFolders(biezacykatalog);
+
+                })
+                $("#home").click(function () {
+                    $(".ui-grid-b").empty();
+                    $(".moja_lista").empty();
+                    biezacykatalog = _root;
+                    listFolders(_root);
+
+                })
+
+
+                function onPrompt(results) {
+                    switch (results.buttonIndex) {
+                        case 1:
+                            biezacykatalog.getDirectory(results.input1, { create: true }, function (dir) { }, function (e) { });
+                            $(".ui-grid-b").empty();
+                            $(".moja_lista").empty();
+                            listFolders(biezacykatalog);
+                            break;
+                        case 2:
+                            alert("Tworzenie katalogu Anulowane");
+                            break;
+
+                    }
+
+
+                }
+
+                // Show a custom prompt dialog
+                //
+                $("#add").click(function () {
+                    navigator.notification.prompt(
+                        'Podaj nazwe katalogu',  // message
+                        onPrompt,                  // callback to invoke
+                        'Nowy katalog',            // title
+                        ['Ok', 'Exit']              // buttonLabels
+                    );
+                })
+
+                /////////////////////////////////////////////
+
+
+                function usuwanie_potw(buttonIndex) {
+                    switch (buttonIndex) {
+                        case 1:
+                           /// if (biezacyelement.isDirectory) {
+                           //     biezacyelement.removeRecursively(function () { }, function (e) { })
+                           // }
+                            if(biezacyelement.isFile) {
+                                alert("file plik usun");
+                                biezacyelement.remove(function () { }, function (e) { alert("Nie mozna usunac"); });
+                            }
+                            $(".moja_lista").empty();
+                            $(".ui-grid-b").empty();
+                            listFolders(biezacykatalog);
+                            break;
+                        case 2:
+                            $(".moja_lista").empty();
+                            $(".ui-grid-b").empty();
+                            listFolders(biezacykatalog);
+                            break;
+
+                    }
+                }
+
+                $("#usun").click(function () {
+                   /// alert("Weszlem do usun ");
+                    $("#anime").animate({ height: 0 }, 300);
+                    navigator.notification.confirm(
+                        'Czy usunac ?',  // message
+                        usuwanie_potw,              // callback to invoke with index of button pressed
+                        'Usuwanie',            // title
+                        'ok,Exit'          // buttonLabels
+                    )
+
+
+                })
+
+                function Rename(results) {
+                    switch (results.buttonIndex) {
+                        case 1:
+                            biezacyelement.moveTo(biezacykatalog, results.input1, function (dir) {
+                                $(".ui-grid-b").empty();
+                                $(".moja_lista").empty();
+                                listFolders(biezacykatalog);
+                            }, function (bb) { alert("bb" + bb.code) });
+
+                            break;
+                        case 2:
+                            alert("Anulowanie Zmieniania nazwy");
+                            break;
+
+                    }
+                }
+
+
+
+
+                $("#zmie").click(function () {
+                   
+                    navigator.notification.prompt(
+                      'Podaj nazwe ',  // message
+                      Rename,                  // callback to invoke
+                      'Zmien nazwe',            // title
+                      ['Ok', 'Exit']              // buttonLabels
+                  );
+
+
+                   
+
+                   
+                })
+
+                $("#wklej").click(function () {
+                    switch(rodzaj){
+                        case false:
+                    alert("przenies");
+                    //    var parent = document.getElementById('parent').value,
+                    //  parentName = parent.substring(parent.lastIndexOf('/') + 1),
+                    //     parentEntry = new DirectoryEntry(biezacyelement.fullPath, parent);
+
+                    // move the file to a new directory and rename it
+                    biezacyelement.moveTo(biezacykatalog, biezacyelement.name, function (e) { alert("OK" + e) }, function (e) { alert("Error"+e)});
+                    operacja = false;
+                    break;
+                        case true:
+                            alert("kopiuj");
+                            //    var parent = document.getElementById('parent').value,
+                            //  parentName = parent.substring(parent.lastIndexOf('/') + 1),
+                            //     parentEntry = new DirectoryEntry(biezacyelement.fullPath, parent);
+
+                            // move the file to a new directory and rename it
+                            biezacyelement.copyTo(biezacykatalog, biezacyelement.name, function (e) { alert("OK" + e) }, function (e) { alert("Error" + e) });
+
+                            operacja = false;
+                            break;
+                }
+                })
+
+                $("#przenies").click(function () {
+                    $("#anime_past").animate({ height: 80 }, 200);
+                    operacja = true;
+                    rodzaj = false;
+                })
+                $("#anuluj").click(function () {
+                    $("#anime_past").animate({ height: 0 }, 200);
+                    operacja = false;
+
+                })
+
+
+                $("#kopiuj").click(function () {
+                    $("#anime_past").animate({ height: 80 }, 200);
+                    operacja = true;
+                    rodzaj = true;
+                })
+            
+
+                $("#wlas").click(function () {
+                 ///   alert("Informacje o pliku\n NAZWA:" + biezacyelement.name + "\nTYP:" +String(biezacyelement.type) + "\nPATH:" + biezacyelement.fullPath + "\nSize:" + String(biezacyelement.size) + "\nModyfikowany:" + String(biezacyelement.lastModifiedDate));
+                  
+                    if (q == true) {
+                       /// alert("true");
+                        alert("Nazwa \n" + String(biezacyelement.name) + "fullpath \n" + String(biezacyelement.fullPath) + "filesystem \n");
+                    } else if (q == false) {
+                      //  alert("false");
+                        alert("Nazwa \n" + String(biezacyelement.name) + "fullpath \n" + String(biezacyelement.fullPath) + "Typ \n" + String(biezacyelement.type));
+                        alert("Data \n" + toDateStr(new Date(biezacyelement.lastModifiedDate)));
+                    } else {
+                        alert("Nie wiadomo co ");
+                    }
+                })
+            
+
+
+
+
+            
+            });
+
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            document.addEventListener("deviceready", onDeviceReady, false);
+
+            function onDeviceReady() {
+                ////alert("Dziala");
+                getFileSystem();
+            }
+
+
+            function getFileSystem() { /// PERSISTEND TO KARTA SD , TEMPORARY TO CO NASZ APLIKACJA ZAPISUJE 
+                window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, fileSystemSuccess, fileSystemRrror);
+            }
+
+            function fileSystemSuccess(fileSystem) {
+              
+                /// alert("typ" + fileSystem.name + "\nKatalog glowny " + fileSystem.root.name + "\nczy to katalog" + fileSystem.root.isDirectory + "\nczy to plik" + fileSystem.root.isFile);
+                // filesystem.roo.fullPath
+                _root = fileSystem.root;
+                biezacykatalog = fileSystem.root;
+                ////alert(fileSystem.name);
+               
+                listFolders(fileSystem.root);
+
+            }
+
+        
+            function listFolders(entry) {
+                if (!entry.isDirectory) {
+                    alert("nie da sie wylistowac");
+                } else {
+                    var reader = entry.createReader();
+                    reader.readEntries(readSuccess, readError);
+                }
+
+            }
+
+
+
+      
+
+
+            function readSuccess(entries) {
+                alert("Succes" + entries.length + "Elementow");
+                if (entries.length == 0) {
+                    alert("Brak jakichkolwiek plikow/katalogow");
+                }
+               
+
+                var cats = "";
+                var files = "";
+
+                var typ;
+                var cla;
+                for (var i = 0; i < entries.length; i++) {
+
+                    //   if (entries[i].isDirectory) cats += "\n" + entries[i].name;
+                    //  if (entries[i].isFile) files += "\n" + entries[i].name;
+
+
+                    /// home
+                    switch (prezentacja) {
+                        case true:
+                            if (entries[i].isDirectory) {
+                                $(".moja_lista").append('<li class="katalog" name=' + entries[i].name + '><img src="img/folder.png"><span style="margin-left:10px"><p class="katalog_napis">' + entries[i].name + '<div style="position:relative;top:-40px;"><hr width="75%"/></div></p></span></img></li>');
+
+                            }
+
+                            if (entries[i].isFile) {
+                                $(".moja_lista").append('<li class="plik" name=' + entries[i].name + '><img src="img/file.png"><span style="margin-left:10px"><p class="katalog_napis">' + entries[i].name + '<div style="position:relative;top:-40px;"><hr width="75%"/></div></p></span></img></li>');
+
+
+                            }
+                            break;
+
+                        case false:
+                            if (entries[i].isDirectory) {
+                                typ = "img/folder.png";
+                                cla = true;
+                            }
+                            if (entries[i].isFile) {
+                                typ = "img/file.png";
+                                cla = false;
+                            }
+                            switch (cla) {
+                                case true:
+                                    if (i % 3 == 0) {
+                                        $(".ui-grid-b").append('<span class="katalog" name=' + entries[i].name + '><div class="ui-block-a" ><img src="' + typ + '"/>' + entries[i].name + '</div></span>');
+                                    } else if (i % 3 == 1) {
+                                        $(".ui-grid-b").append('<span class="katalog" name=' + entries[i].name + '><div class="ui-block-b" ><img src="' + typ + '"/>' + entries[i].name + '</div></span>');
+                                    } else if (i % 3 == 2) {
+                                        $(".ui-grid-b").append('<span class="katalog" name=' + entries[i].name + '><div class="ui-block-c" ><img src="' + typ + '"/>' + entries[i].name + '</div></span>');
+                                    }
+                                    break;
+                                case false:
+                                    if (i % 3 == 0) {
+                                        $(".ui-grid-b").append('<span class="plik" name=' + entries[i].name + '><div class="ui-block-a" ><img src="' + typ + '"/>' + entries[i].name + '</div></span>');
+                                    } else if (i % 3 == 1) {
+                                        $(".ui-grid-b").append('<span class="plik" name=' + entries[i].name + '><div class="ui-block-b" ><img src="' + typ + '"/>' + entries[i].name + '</div></span>');
+                                    } else if (i % 3 == 2) {
+                                        $(".ui-grid-b").append('<span class="plik" name=' + entries[i].name + '><div class="ui-block-c" ><img src="' + typ + '"/>' + entries[i].name + '</div></span>');
+                                    }
+                                    break;
+
+                            }
+
+
+
+                            break;
+                    }
+                    /// slider 
+                    /*
+                    if (entries[i].isDirectory) {
+                        typ = "img/folder.png";
+                    }
+                    if (entries[i].isFile) {
+                        typ = "img/file.png";
+                    }
+    
+    
+    
+                    if (i % 3 == 0) {
+                        $(".ui-grid-b").append('<div class="ui-block-a" ><img src="' + typ + '"/>' + entries[i].name + '</div>');
+                    } else if (i % 3 == 1) {
+                        $(".ui-grid-b").append('<div class="ui-block-b"><img src="' + typ + '"/>' + entries[i].name + '</div>');
+                    } else if (i % 3 == 2) {
+                        $(".ui-grid-b").append('<div class="ui-block-c"><img src="' + typ + '"/>' + entries[i].name + '</div>');
+                    }
+    
+    
+                    
+                    */
+
+
+
+
+                }
+                $(".katalog").click(function () {
+                    alert($(this).attr("name"));
+
+
+
+                    biezacykatalog.getDirectory($(this).attr("name"), { create: false }, function (dir) { biezacykatalog = dir }, function (e) { "error code :" + alert(e.code) })
+                    alert("fi" + String(biezacykatalog.fullPath));
+                    var zz = String(biezacykatalog.fullPath);
+                    var tmpp = "";
+                    for (var i = 7; i < String(biezacykatalog.fullPath).length; i++) {
+                        if (!zz.charAt[i] == '/') {
+                            tmpp += zz.charAt(i);
+                        } else {
+                            $("#qwe").append(String(tmpp));
+                            tmpp = "";
+                        }
+                        ///$("#qwe").append("s");
+                       /// alert("od 7 jedziemy");
+                    }
+                    ///// alert("REFRESZUJE !!!");
+                    $(".moja_lista").empty();
+                    $(".ui-grid-b").empty();
+                    listFolders(biezacykatalog);
+                 
+                })
+                $(".plik").click(function () {
+                   
+                    biezacykatalog.getFile($(this).attr("name"), { create: false, exclusive: false }, function (ok) { biezacyelement = ok.fullPath }, function (fail) { alert("Alert"); });
+                    alert("biezacy element"+ biezacyelement +"::" + biezacykatalog );
+                    window.open(biezacyelement, $(this).attr("name"), '');
+
+                })
+                $(".katalog").taphold(function () {
+                    biezacykatalog.getDirectory($(this).attr("name"), { create: false }, function (dir) { biezacyelement = dir; q = true; }, function (e) { "error code :" + alert(e.code) })
+                    alert("biezacy katalog : " + biezacyelement.name);
+                   
+                    $("#anime").animate({ height: 250 }, 200);
+                   
+                    
+
+                    ////$(this).css("background", "#kolor");
+
+                })
+                $(".plik").taphold(function () {
+                    alert("Taphold plik ");
+                    biezacykatalog.getFile($(this).attr("name"), { create: false, exclusive: false }, function (ok) { biezacyelement = ok; q = false; }, function (fail) { alert("Alert"); });
+                    alert("biezacy element plik : " + biezacyelement.name);
+                    
+                    $("#anime").animate({ height: 250 }, 200);
+                   
+
+                })
+                $("#anime").animate({ height: 0 }, 300);
+                if (operacja == true) {
+                    $("#anime_past").animate({ height: 80 }, 200);
+                } else if (operacja == false) {
+                    $("#anime_past").animate({ height: 0 }, 300);
+                }
+
+
+                $(".menu_option").tap(function () {
+                    $(".menu_option").css("background", "blue");
+                    $(this).css("background", "black");
+                   //// $("#anime").animate({ height: 0 }, 300);
+                });
+             
+
+            }
+            
+           
+
+           
+
+
+                function readError(e) {
+                    alert("read error");
+                }
+
+                function fileSystemRrror(data){
+                    alert(data.code);
+                }
+</script>
+</head>
+<body>
+    <div data-role="page">
+        <div data-role="header" style="background-image: url(img/background_bar.png); text-align: center;">
+            <img src="img/home.png" id="home" />
+            <img src="img/up.png" id="up" />
+            <img src="img/tools.png" id="tools" />
+            <img src="img/add.png" id="add" />
+            <img src="img/refresh.png" id="refresh" />
+            <img src="img/quit.png" id="quit" />
+        </div>
+        <div data-role="header" style="text-align: center;background-color:white;">
+           <p id="qwe"/>
+        </div>
+          <div data-role="header"  text-align: center;">
+              <div id="sciezka"></div>
+              </div>
+        <!-- /header -->
+
+        <div data-role="content">
+            <div data-role="popup" data-dismissible="false" id="pop1" style="width: 300px; height: 200px; background: #ffff00; text-align: center">
+                <p style="text-align: center; font-family: Arial; font-size: 20px">Grid/Lista ?</p>
+
+
+                <div data-role="fieldcontain">
+                    <fieldset data-role="controlgroup">
+                        <legend style="text-align: center;">Sposob przedstawienia </legend>
+                        <input type="radio" name="radio-choice-2" id="radio-choice-1" value="choice-1" checked="checked" />
+                        <label for="radio-choice-1">Lista</label>
+
+                        <input type="radio" name="radio-choice-2" id="radio-choice-2" value="choice-2" checked="checked" />
+                        <label for="radio-choice-2">Grid</label>
+
+
+                    </fieldset>
+                </div>
+             </div>
+
+            <div class="ui-grid-b" >
+                </div>
+            <div class="moja_lista">
+                </div>
+
+
+
+
+        </div>
+        <!-- /content -->
+
+        <div data-role="footer" >
+            <div id="anime" style="position:fixed;bottom:0;height:0;text-align:center;width:100%" >
+            <div>
+                <table >
+                <tr>    
+                        <td id="kopiuj" class="menu_option"><img src="img/pole/copy.png"/>kopiuj</td>
+                       <td id="przenies" class="menu_option"><img src="img/pole/move.png"/>przenies</td>
+                </tr>
+                <tr>    
+                        <td  id="usun" class="menu_option"><img src="img/pole/delete.png"/>Usun</td>
+                       <td id="zmie" class="menu_option"><img src="img/pole/rename.png"/>Zmien nazwe</td>
+                </tr>
+                <tr>
+                         <td  id="wlas" colspan="2" style="width:100%;height:50px" class="menu_option"><img src="img/pole/properties.png"/>Wlasciwosci</td>
+                </tr>
+
+
+            </table>
+                </div>
+                </div>
+                <div id="anime_past" style="position:fixed;bottom:0;text-align:center;height:0;width:100%" >
+                     <div>
+                 <table >
+                <tr>    
+                        <td id="wklej" class="menu_option"><img src="img/pole/paste.png"/>wklej</td>
+                       <td id="anuluj" class="menu_option"><img src="img/pole/cancel.png"/>Anukluj</td>
+                </tr>
+
+                </table>
+                         </div>
+                </div>
+
+
+
+           <p style="text-align: center;">&copy Mike Prochownik kl:4"ID"</p>
+        </div>
+        <!-- /footer -->
+    </div>
+    <!-- /page -->
+
+</body>
+</html>

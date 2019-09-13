@@ -1,0 +1,3 @@
+# view AndroidManifest.xml #generated:52
+-keep class Michal_Prochownik_Manager.Michal_Prochownik_Manager.Michal_Prochownik_Manager.Michal_Prochownik_Manager { <init>(...); }
+
